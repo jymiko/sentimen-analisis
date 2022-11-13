@@ -112,8 +112,12 @@ WSGI_APPLICATION = 'sentimentanalysisapi.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'sentiment',
+        'USER': 'admin',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
+        'PORT': 5432,
     }
 }
 
@@ -174,5 +178,13 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 # Guest User Credential
+GUEST_USERNAME = os.getenv("GUEST_USERNAME")
 GUEST_EMAIL = os.getenv("GUEST_EMAIL")
 GUEST_PASSWORD = os.getenv("GUEST_PASSWORD")
+
+# Tweepy
+BEARER_TOKEN = os.getenv("BEARER_TOKEN")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACCESS_SECRET = os.getenv("ACCESS_SECRET")
+API_KEY = os.getenv("API_KEY")
+API_SECRET = os.getenv("API_SECRET")
