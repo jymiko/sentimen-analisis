@@ -168,5 +168,9 @@ STATIC_URL = '/static/'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'jatmiko.design@gmail.com'
-EMAIL_HOST_PASSWORD = 'Malang2019.'
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+# Guest User Credential
+GUEST_EMAIL = os.getenv("GUEST_EMAIL")
+GUEST_PASSWORD = os.getenv("GUEST_PASSWORD")
