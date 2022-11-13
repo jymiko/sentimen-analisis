@@ -11,6 +11,10 @@ class CrawlerSerializers(BulkSerializerMixin, serializers.ModelSerializer):
 
 
 class TweetSentimentSerializers(serializers.ModelSerializer):
+    text = serializers.CharField(read_only=True)
+    created_at = serializers.CharField(read_only=True)
+    media = serializers.JSONField(read_only=True)
 
     class Meta:
         model = TweetSentiment
+        exclude = ("user",)

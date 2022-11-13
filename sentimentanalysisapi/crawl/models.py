@@ -24,8 +24,7 @@ class TweetSentiment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tweet_id = models.CharField(max_length=50)
     text = models.TextField()
-    media_key = models.CharField(max_length=255, blank=True, null=True)
-    media_type = models.CharField(max_length=50, blank=True, null=True)
+    media = models.JSONField(blank=True, null=True)
     created_at = models.CharField(max_length=255)
     point = models.IntegerField(
         choices=PointClassification.choices,

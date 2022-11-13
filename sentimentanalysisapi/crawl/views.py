@@ -1,5 +1,8 @@
-from rest_framework import viewsets
+from django.conf import settings
+
+from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
 
 from authentication.models import User
@@ -34,11 +37,11 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated and not self.request.user.is_superuser:
             user = self.request.user
         else:
-            user = User.objects.get_or_create(
-                username="guest",
+            user, _ = User.objects.get_or_create(
+                username=settings.GUEST_USERNAME,
                 defaults={
-                    "email": "guest@guest.xyz",
-                    "password": "guest911"
+                    "email": settings.GUEST_EMAIL,
+                    "password": settings.GUEST_PASSWORD
                 }
             )
 
