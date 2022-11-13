@@ -1,5 +1,3 @@
-import tweepy
-
 from django.conf import settings
 
 from rest_framework import viewsets, status
@@ -9,6 +7,7 @@ from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
 
 from authentication.models import User
 
+from .helpers import get_tweet_info
 from .serializer import CrawlerSerializers, TweetSentimentSerializers
 from .models import Crawl, TweetSentiment
 
@@ -36,28 +35,11 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
         return TweetSentiment.objects.none()
 
     def create(self, request, *args, **kwargs):
-        data = request.data
-
         # Tweepy Section
-        client = tweepy.Client(
-            settings.BEARER_TOKEN,
-            settings.API_KEY,
-            settings.API_SECRET,
-            settings.ACCESS_TOKEN,
-            settings.ACCESS_SECRET
-        )
+        data = get_tweet_info(request.data.get("tweet_id"))
 
-        tweet = client.get_tweet(
-            id=data.get("tweet_id"),
-            expansions=["author_id", "in_reply_to_user_id", "referenced_tweets.id", "attachments.media_keys"],
-            tweet_fields=["author_id", "conversation_id", "created_at", "in_reply_to_user_id", "referenced_tweets", "attachments"]
-        )
-
-        data['text'] = tweet.data.text
-        data['created_at'] = tweet.data.created_at.strftime('%Y-%m-%d %H:%M:%S')
-
-        if tweet.includes and tweet.includes.get('media'):
-            data['media'] = [{'media_key': x.media_key, 'type': x.type} for x in tweet.includes.get('media')]
+        if data.get('status'):
+            return Response(data.get("message"), status=data.get("status"))
 
         # TODO: Analysis Section
 
@@ -78,8 +60,8 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
                 username=settings.GUEST_USERNAME,
                 defaults={
                     "email": settings.GUEST_EMAIL,
-                    "password": settings.GUEST_PASSWORD
-                }
+                    "password": settings.GUEST_PASSWORD,
+                },
             )
 
         serializer.save(user=user)
