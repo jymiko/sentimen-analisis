@@ -1,13 +1,67 @@
-from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
-from .serializer import CrawlerSerializers
-from .models import Crawl
+from django.conf import settings
 
-# Create your views here.
+from rest_framework import viewsets, status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
+
+from authentication.models import User
+
+from .helpers import get_tweet_info
+from .serializer import CrawlerSerializers, TweetSentimentSerializers
+from .models import Crawl, TweetSentiment
+
+
 class CrawlData(ListBulkCreateUpdateDestroyAPIView):
-    queryset =Crawl.objects.all()
+    queryset = Crawl.objects.all()
     serializer_class = CrawlerSerializers
+
     def perform_create(self, serializer):
         return serializer.save()
-    #
-    # def get_queryset(self):
-    #     return self.queryset.filter()
+
+
+class TweetSentimentViewSet(viewsets.ModelViewSet):
+    serializer_class = TweetSentimentSerializers
+
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return TweetSentiment.objects.all()
+
+        if self.request.user.is_authenticated:
+            return self.request.user.tweetsentiment_set.all()
+
+        return TweetSentiment.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        # Tweepy Section
+        data = get_tweet_info(request.data.get("tweet_id"))
+
+        if data.get('status'):
+            return Response(data.get("message"), status=data.get("status"))
+
+        # TODO: Analysis Section
+
+        # Create a new object
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated and not self.request.user.is_superuser:
+            user = self.request.user
+        else:
+            user, _ = User.objects.get_or_create(
+                username=settings.GUEST_USERNAME,
+                defaults={
+                    "email": settings.GUEST_EMAIL,
+                    "password": settings.GUEST_PASSWORD,
+                },
+            )
+
+        serializer.save(user=user)

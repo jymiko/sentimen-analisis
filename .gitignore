@@ -1,2 +1,10 @@
 .idea/
 venv/
+__pycache__
+*.py[cod]
+db.sqlite3
+
+.vscode
+
+# Cert file
+root.crt

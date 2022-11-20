@@ -112,12 +112,12 @@ WSGI_APPLICATION = 'sentimentanalysisapi.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'sentiment',
-        'USER': 'root',
-        'PASSWORD': 'Malang2019.',
-        'HOST': '127.0.0.1',
-        'PORT': '5500'
+        'USER': 'admin',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
+        'PORT': 5432,
     }
 }
 
@@ -155,7 +155,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Jakarta'
 
 USE_I18N = True
 
@@ -169,8 +169,22 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'jatmiko.design@gmail.com'
-EMAIL_HOST_PASSWORD = 'Malang2019.'
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+# Guest User Credential
+GUEST_USERNAME = os.getenv("GUEST_USERNAME")
+GUEST_EMAIL = os.getenv("GUEST_EMAIL")
+GUEST_PASSWORD = os.getenv("GUEST_PASSWORD")
+
+# Tweepy
+BEARER_TOKEN = os.getenv("BEARER_TOKEN")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACCESS_SECRET = os.getenv("ACCESS_SECRET")
+API_KEY = os.getenv("API_KEY")
+API_SECRET = os.getenv("API_SECRET")
