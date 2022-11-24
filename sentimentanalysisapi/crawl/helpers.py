@@ -32,6 +32,9 @@ def get_tweet_info(tweet_id):
             ]
         )
 
+        if tweet_info.errors:
+            raise Exception(tweet_info.errors[0].get("detail"))
+
         media = None
         if tweet_info.includes and tweet_info.includes.get("media"):
             media = [
@@ -43,10 +46,14 @@ def get_tweet_info(tweet_id):
             "tweet_id": tweet_id,
             "text": tweet_info.data.text,
             "created_at": tweet_info.data.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "media": media
+            "media": media,
         }
     except Exception as err:
-        return {
-            "message": err.response.reason,
-            "status": err.response.status_code
-        }
+        if hasattr(err, "response"):
+            message = err.response.reason
+            status = err.response.status_code
+        else:
+            message = str(err)
+            status = 400
+
+        return {"message": message, "status": status}
