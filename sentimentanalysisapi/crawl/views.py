@@ -39,7 +39,7 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
         data = get_tweet_info(request.data.get("tweet_id"))
 
         if data.get('status'):
-            return Response(data.get("message"), status=data.get("status"))
+            return Response(data={"message": data.get("message")}, status=data.get("status"))
 
         # TODO: Analysis Section
 
