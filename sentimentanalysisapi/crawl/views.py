@@ -1,12 +1,18 @@
+import pandas as pd
+
+from http import HTTPStatus
+from io import StringIO
+
 from django.conf import settings
 
-from rest_framework import viewsets, status
-from rest_framework.permissions import AllowAny
+from rest_framework import viewsets, status, generics, parsers
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
 
 from authentication.models import User
 
+from .analysis import SentimentAnalyst
 from .helpers import get_tweet_info
 from .serializer import CrawlerSerializers, TweetSentimentSerializers
 from .models import Crawl, TweetSentiment
@@ -39,9 +45,10 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
         data = get_tweet_info(request.data.get("tweet_id"))
 
         if data.get('status'):
-            return Response(data.get("message"), status=data.get("status"))
+            return Response(data={"message": data.get("message")}, status=data.get("status"))
 
-        # TODO: Analysis Section
+        analyst = SentimentAnalyst(data.get("tweet_id"), data.get("text"))
+        data['point'] = analyst.perform_analysis()
 
         # Create a new object
         serializer = self.get_serializer(data=data)
@@ -65,3 +72,26 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
             )
 
         serializer.save(user=user)
+
+
+class TweetSentimentSeederView(generics.CreateAPIView):
+    parser_classes = (
+        parsers.MultiPartParser,
+        parsers.FormParser,
+    )
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        pd.read_csv(
+            StringIO(request.data.get("fixtures")),
+            keep_default_na=False,
+            na_values=None,
+        ).to_csv(f"{settings.BASE_DIR}/fixtures.csv", index=False)
+
+        return Response(
+            data={"message": "File saved Successfully."},
+            status=HTTPStatus.CREATED,
+        )
+
+
+ts_seeder_view = TweetSentimentSeederView.as_view()
