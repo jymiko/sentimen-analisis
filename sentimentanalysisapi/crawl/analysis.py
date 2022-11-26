@@ -15,7 +15,6 @@ from scipy.sparse import hstack
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
-from sqlalchemy import create_engine
 
 from typing import Any
 
@@ -38,10 +37,7 @@ class SentimentAnalyst:
 
     def build_tweetsentiment_df(self):
 
-        df = pd.read_csv(
-            f"{settings.BASE_DIR}/fixtures.csv",
-            usecols=['text', 'point']
-        )
+        df = pd.read_csv(f"{settings.BASE_DIR}/fixtures.csv", usecols=["text", "point"])
 
         return self.update_df(df)
 
@@ -93,8 +89,7 @@ class SentimentAnalyst:
         X = df.drop(columns="point")
         y = df.point
         x_train, x_val, y_train, _ = train_test_split(
-            X, y, stratify=y,
-            test_size=0.33, random_state=42
+            X, y, stratify=y, test_size=0.33, random_state=42
         )
 
         train_text = self.preprocess(x_train.text)
@@ -108,7 +103,10 @@ class SentimentAnalyst:
         )
         self.vectorizer.fit(train_text)
 
-        res = self.get_hstack(self.vectorizer.transform(train_text), x_train.iloc[:, [-6, -5, -2, -1]].values)
+        res = self.get_hstack(
+            self.vectorizer.transform(train_text),
+            x_train.iloc[:, [-6, -5, -2, -1]].values,
+        )
 
         return res, y_train
 
@@ -137,7 +135,8 @@ class SentimentAnalyst:
                     "text": test_data.text,
                     "point": model_nb.predict(
                         self.get_hstack(
-                            self.vectorizer.transform(test_text), test_data.iloc[:, -4:].values
+                            self.vectorizer.transform(test_text),
+                            test_data.iloc[:, -4:].values,
                         )
                     ),
                 }
