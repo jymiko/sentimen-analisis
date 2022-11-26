@@ -110,16 +110,24 @@ WSGI_APPLICATION = 'sentimentanalysisapi.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+DB_ROOTCERT_PATH = os.path.join(BASE_DIR, os.getenv("DB_SSL_ROOT_CERT_PATH"))
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sentiment',
-        'USER': 'admin',
-        'PASSWORD': 'admin',
-        'HOST': 'localhost',
-        'PORT': 5432,
+        'NAME': os.getenv('DB_NAME', 'sentiment'),
+        'USER': os.getenv('DB_USER', 'admin'),
+        'PASSWORD': os.getenv('DB_PASS', 'my-db-p@ssw0rd') ,
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', 5433),
+        'OPTIONS': {
+            'sslmode': os.getenv('DB_SSL_MODE'),
+            'sslrootcert': DB_ROOTCERT_PATH
+        }
     }
 }
+
+DATABASE_URI = f'{os.getenv("DB_URI")}{DB_ROOTCERT_PATH}'
 
 REST_FRAMEWORK = {
     'NON_FIELD_ERRORS_KEY': 'error',
