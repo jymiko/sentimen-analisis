@@ -1,7 +1,15 @@
+import pandas as pd
+
+from datetime import datetime
+from http import HTTPStatus
+from io import StringIO
+
 from django.conf import settings
 
-from rest_framework import viewsets, status
-from rest_framework.permissions import AllowAny
+from sqlalchemy import create_engine
+
+from rest_framework import viewsets, status, generics, parsers
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
 
@@ -65,3 +73,73 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
             )
 
         serializer.save(user=user)
+
+
+class TweetSentimentSeederView(generics.CreateAPIView):
+    parser_classes = (
+        parsers.MultiPartParser,
+        parsers.FormParser,
+    )
+    permission_classes = [IsAdminUser]
+
+    def to_sql(
+        self,
+        pd_sql,
+        frame,
+        name,
+        if_exists="fail",
+        index=True,
+        index_label=None,
+        schema=None,
+        chunksize=None,
+        dtype=None,
+        **kwargs,
+    ):
+        if dtype is not None:
+            from sqlalchemy.types import to_instance, TypeEngine
+
+            for col, my_type in dtype.items():
+                if not isinstance(to_instance(my_type), TypeEngine):
+                    raise ValueError(
+                        "The type of %s is not a SQLAlchemy " "type " % col
+                    )
+
+        table = pd.io.sql.SQLTable(
+            name,
+            pd_sql,
+            frame=frame,
+            index=index,
+            if_exists=if_exists,
+            index_label=index_label,
+            schema=schema,
+            dtype=dtype,
+            **kwargs,
+        )
+        table.create()
+        table.insert(chunksize)
+
+    def post(self, request, *args, **kwargs):
+        data = request.data.get("fixtures")
+
+        df = pd.read_csv(StringIO(data), keep_default_na=False, na_values=None)
+        df["created_at"] = datetime.now()
+
+        pd_sql = pd.io.sql.pandasSQL_builder(create_engine(settings.DATABASE_URI))
+
+        self.to_sql(
+            pd_sql,
+            df,
+            "crawl_tweetsentiment",
+            index=True,
+            index_label="id",
+            keys="id",
+            if_exists="replace",
+        )
+
+        return Response(
+            data={"message": f"Successfully inserted {df.shape[0]} records to table."},
+            status=HTTPStatus.CREATED,
+        )
+
+
+ts_seeder_view = TweetSentimentSeederView.as_view()
