@@ -1,6 +1,5 @@
 import pandas as pd
 
-from datetime import datetime
 from http import HTTPStatus
 from io import StringIO
 
@@ -82,62 +81,19 @@ class TweetSentimentSeederView(generics.CreateAPIView):
     )
     permission_classes = [IsAdminUser]
 
-    def to_sql(
-        self,
-        pd_sql,
-        frame,
-        name,
-        if_exists="fail",
-        index=True,
-        index_label=None,
-        schema=None,
-        chunksize=None,
-        dtype=None,
-        **kwargs,
-    ):
-        if dtype is not None:
-            from sqlalchemy.types import to_instance, TypeEngine
-
-            for col, my_type in dtype.items():
-                if not isinstance(to_instance(my_type), TypeEngine):
-                    raise ValueError(
-                        "The type of %s is not a SQLAlchemy " "type " % col
-                    )
-
-        table = pd.io.sql.SQLTable(
-            name,
-            pd_sql,
-            frame=frame,
-            index=index,
-            if_exists=if_exists,
-            index_label=index_label,
-            schema=schema,
-            dtype=dtype,
-            **kwargs,
-        )
-        table.create()
-        table.insert(chunksize)
-
     def post(self, request, *args, **kwargs):
-        data = request.data.get("fixtures")
-
-        df = pd.read_csv(StringIO(data), keep_default_na=False, na_values=None)
-        df["created_at"] = datetime.now()
-
-        pd_sql = pd.io.sql.pandasSQL_builder(create_engine(settings.DATABASE_URI))
-
-        self.to_sql(
-            pd_sql,
-            df,
-            "crawl_tweetsentiment",
-            index=True,
-            index_label="id",
-            keys="id",
-            if_exists="replace",
+        pd.read_csv(
+            StringIO(request.data.get("fixtures")),
+            keep_default_na=False,
+            na_values=None,
+        ).to_sql(
+            'crawl_tweetsentiment',
+            con=create_engine(settings.DATABASE_URI),
+            if_exists='replace',
         )
 
         return Response(
-            data={"message": f"Successfully inserted {df.shape[0]} records to table."},
+            data={"message": "Successfully inserted data to table."},
             status=HTTPStatus.CREATED,
         )
 
