@@ -12,6 +12,7 @@ from rest_framework_bulk import ListBulkCreateUpdateDestroyAPIView
 
 from authentication.models import User
 
+from .analysis import SentimentAnalyst
 from .helpers import get_tweet_info
 from .serializer import CrawlerSerializers, TweetSentimentSerializers
 from .models import Crawl, TweetSentiment
@@ -46,7 +47,8 @@ class TweetSentimentViewSet(viewsets.ModelViewSet):
         if data.get('status'):
             return Response(data={"message": data.get("message")}, status=data.get("status"))
 
-        # TODO: Analysis Section
+        analyst = SentimentAnalyst(data.get("tweet_id"), data.get("text"))
+        data['point'] = analyst.perform_analysis()
 
         # Create a new object
         serializer = self.get_serializer(data=data)
