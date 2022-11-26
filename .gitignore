@@ -8,3 +8,6 @@ db.sqlite3
 
 # Cert file
 root.crt
+
+# Fixtures file
+fixtures.csv
