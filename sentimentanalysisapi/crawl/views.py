@@ -5,8 +5,6 @@ from io import StringIO
 
 from django.conf import settings
 
-from sqlalchemy import create_engine
-
 from rest_framework import viewsets, status, generics, parsers
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -86,14 +84,10 @@ class TweetSentimentSeederView(generics.CreateAPIView):
             StringIO(request.data.get("fixtures")),
             keep_default_na=False,
             na_values=None,
-        ).to_sql(
-            'crawl_tweetsentiment',
-            con=create_engine(settings.DATABASE_URI),
-            if_exists='replace',
-        )
+        ).to_csv(f"{settings.BASE_DIR}/fixtures.csv", index=False)
 
         return Response(
-            data={"message": "Successfully inserted data to table."},
+            data={"message": "File saved Successfully."},
             status=HTTPStatus.CREATED,
         )
 
